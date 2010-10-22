@@ -1,0 +1,70 @@
+.container {
+  width: 985px;
+  margin: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.box {
+  background: #EEE;
+  background: rgba(255,255,255,0.4);
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  box-shadow: 0px 0px 2px #999;
+  -moz-box-shadow: 0px 0px 2px #999;
+  -webkit-box-shadow: 0px 0px 2px #999;
+}
+
+body {
+  font: 1em "Lucida Grande", "Helvetica Nueue", Arial, sans-serif;
+  padding-top: 2em;
+  background-color: #E3E2DD;
+}
+
+table#memberships {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table#memberships th {
+  background-color: #295177;
+  color: white;
+  padding: 5px;
+  text-align: left;
+  font-weight: normal;
+}
+
+table#memberships td {
+  border: 1px solid #295177;
+  padding: 5px;
+}
+
+.header h1 {
+  margin: 0px;
+}
+
+.header a, .footer a {
+  color: black;
+}
+
+.hint {
+  font-size: 90%;
+  color: #666;
+}
+
+input {
+  font-size: 1em;
+}
+
+.header p {
+  margin-top: 0px;
+  
+}
+
+.footer {
+  font-size: 80%;
+  margin-top: 5em;
+}

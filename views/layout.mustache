@@ -1,7 +1,22 @@
 <html>
-  <head></head>
+  <head>
+    <title>maitre</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" type="text/css" media="screen" charset="utf-8"/>
+  </head>
   <body>
-    {{{body}}}
+    <div class="container header">
+      <h1>Maitre</h1>
+      <p>a <a href="http://cobot.me">cobot</a> app</p>
+    </div>
+    
+    <div class="container box">
+      {{{body}}}
+    </div>
+    
+    <div class="container footer box">
+      &copy; 2010 Upstream - Agile GmbH | <a href="http://github.com/upstream/maitre">fork on Github</a>
+    </div>
+    
     {{#subdomain}}
       <script type="text/javascript" charset="utf-8">
         window.space_subdomain = '{{subdomain}}';
