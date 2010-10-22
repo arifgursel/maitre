@@ -1,0 +1,28 @@
+<h2>Coworkers</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Plan</th>
+      <th>Payment Method</th>
+      <th>Attendance</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#memberships}}
+      <tr>
+        <td>
+          {{name}}
+        </td>
+        <td>
+          {{plan}}
+        </td>
+        <td>
+          {{payment_method}}
+        </td>
+        <td></td>
+      </tr>
+    {{/memberships}}
+  </tbody>
+</table>

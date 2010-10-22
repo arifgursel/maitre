@@ -41,7 +41,7 @@ var oa= new OAuth(cobot_base_url + "/oauth/request_token",
                   "T9NO0aQIgkD81XkeR8Ag",
                   "Cz4ImF6Y1GRgenom1Jyarmb3lIzlgo2kCBQhWaEp",
                   "1.0",
-                  'http://localhost:3001/oauth',
+                  'http://localhost:3005/oauth',
                   "HMAC-SHA1");
 
 // Routes
@@ -75,18 +75,41 @@ app.get('/oauth', function(req, res) {
 });
 
 app.get('/user', function(req, res) {
-  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, data, response) {
+  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, user, response) {
     if(error) {
       res.send('error :' + sys.inspect(error), 500);
     } else {
-      res.send(data, 200);
+      res.render('user', {locals: {
+        login: user.login
+      }});
     }
   });
   
 });
 
+
+app.get('/spaces/:subdomain', function(req, res) {
+  oa.getProtectedResource(cobot_base_url.replace('www', req.params.subdomain) + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, memberships, response) {
+    if(error) {
+      res.send('error :' + sys.inspect(error), 500);
+    } else {
+      res.render('memberships', {
+        locals: {
+          memberships: JSON.parse(memberships).map(function(membership) {
+            return {
+              name: membership.address.name || membership.address.company,
+              plan: membership.plan.name,
+              payment_method: membership.payment_method.name
+            };
+          })
+        }
+      });
+    }
+  });
+});
+
 // Only listen on $ node app.js
 
 if (!module.parent) {
-  app.listen(parseInt(process.env.PORT || 3001, 10));
+  app.listen(parseInt(process.env.PORT || 3005, 10));
 }
