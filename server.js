@@ -2,6 +2,7 @@ require.paths.unshift('vendor/node-oauth/lib');
 require.paths.unshift('vendor/connect/lib');
 require.paths.unshift('vendor/express/lib');
 require.paths.unshift('vendor');
+require.paths.unshift('lib');
 
 
 var express = require('express'),
@@ -10,6 +11,7 @@ var express = require('express'),
 var sys= require('sys');
 var app = module.exports = express.createServer();
 var OAuth= require('oauth').OAuth;
+var MembershipsView = require('views').MembershipsView;
 
 // Configuration
 
@@ -89,21 +91,53 @@ app.get('/user', function(req, res) {
 
 
 app.get('/spaces/:subdomain', function(req, res) {
-  oa.getProtectedResource(cobot_base_url.replace('www', req.params.subdomain) + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, memberships, response) {
+  var space_base_url = cobot_base_url.replace('www', req.params.subdomain);
+  oa.getProtectedResource(space_base_url + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, memberships, response) {
     if(error) {
       res.send('error :' + sys.inspect(error), 500);
     } else {
-      res.render('memberships', {
-        locals: {
-          memberships: JSON.parse(memberships).map(function(membership) {
-            return {
-              name: membership.address.name || membership.address.company,
-              plan: membership.plan.name,
-              payment_method: membership.payment_method.name
-            };
-          })
+      oa.getProtectedResource(space_base_url + "/api/work_sessions?from=" + beginning_of_day() + '&to=' + end_of_day(), "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, work_sessions, response) {
+        if(error) {
+          res.send('error :' + sys.inspect(error), 500);
+        } else {
+          res.render('memberships', {
+            locals: {
+              memberships: MembershipsView(JSON.parse(memberships), JSON.parse(work_sessions)),
+              subdomain: req.params.subdomain
+            }
+          });
         }
       });
+    }
+  });
+  
+  function beginning_of_day() {
+    var now = new Date();
+    return ISODateString(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
+  }
+  
+  function end_of_day() {
+    var now = new Date();
+    return ISODateString(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59));
+  }
+  
+  function ISODateString(d){
+   function pad(n){return n<10 ? '0'+n : n;}
+   return d.getUTCFullYear()+'-'
+        + pad(d.getUTCMonth()+1)+'-'
+        + pad(d.getUTCDate())+'T'
+        + pad(d.getUTCHours())+':'
+        + pad(d.getUTCMinutes())+':'
+        + pad(d.getUTCSeconds())+'Z';}
+});
+
+app.post('/:subdomain/:membership_id/check_ins', function(req, res) {
+  var space_base_url = cobot_base_url.replace('www', req.params.subdomain);
+  oa.getProtectedResource(space_base_url + '/api/memberships/' + req.params.membership_id + '/work_sessions', "POST", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, _1, _2) {
+    if(error) {
+      res.send('error :' + sys.inspect(error), 500);
+    } else {
+      res.send(201);
     }
   });
 });

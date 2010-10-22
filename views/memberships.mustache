@@ -1,6 +1,6 @@
 <h2>Coworkers</h2>
 
-<table>
+<table id="memberships">
   <thead>
     <tr>
       <th>Name</th>
@@ -21,7 +21,14 @@
         <td>
           {{payment_method}}
         </td>
-        <td></td>
+        <td>
+          {{#checked_in}}
+            already checked in
+          {{/checked_in}}
+          {{^checked_in}}
+            <a href="#" class="check_in" data-membership-id="{{id}}">Check in</a>
+          {{/checked_in}}
+        </td>
       </tr>
     {{/memberships}}
   </tbody>

@@ -237,7 +237,7 @@ exports.OAuth.prototype._performSecureRequest= function( oauth_token, oauth_toke
         data+=chunk;
       });
       response.addListener('end', function () {
-        if( response.statusCode != 200 ) {
+        if( response.statusCode / 100 >= 3 ) {
           callback({ statusCode: response.statusCode, data: data });
         } else {
           callback(null, data, response);

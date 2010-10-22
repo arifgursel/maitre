@@ -2,6 +2,11 @@
   <head></head>
   <body>
     {{{body}}}
+    {{#subdomain}}
+      <script type="text/javascript" charset="utf-8">
+        window.space_subdomain = '{{subdomain}}';
+      </script>
+    {{/subdomain}}
     <script type="text/javascript" src="/javascripts/jquery.js"></script>
     <script type="text/javascript" src="/javascripts/app.js"></script>
   </body>
