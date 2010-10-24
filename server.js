@@ -26,25 +26,31 @@ app.configure(function(){
     app.use(connect.staticProvider(__dirname + '/public'));
 });
 
-var cobot_base_url;
+var cobot_base_url, oa;
 
 app.configure('development', function(){
     app.use(connect.errorHandler({ dumpExceptions: true, showStack: true })); 
     cobot_base_url = 'http://www.smackaho.st:3000';
+    oa = new OAuth(cobot_base_url + "/oauth/request_token",
+      cobot_base_url + "/oauth/access_token",
+      "T9NO0aQIgkD81XkeR8Ag",
+      "Cz4ImF6Y1GRgenom1Jyarmb3lIzlgo2kCBQhWaEp",
+      "1.0",
+      'http://localhost:3005/oauth',
+      "HMAC-SHA1");
 });
 
 app.configure('production', function(){
    app.use(connect.errorHandler()); 
    cobot_base_url = 'https://www.cobot.me';
+   oa = new OAuth(cobot_base_url + "/oauth/request_token",
+     cobot_base_url + "/oauth/access_token",
+     process.env.OAUTH_CONSUMER_KEY,
+     process.env.OAUTH_CONSUMER_SECRET,
+     "1.0",
+     'http://maitre.heroku.com/oauth',
+     "HMAC-SHA1");
 });
-
-var oa= new OAuth(cobot_base_url + "/oauth/request_token",
-                  cobot_base_url + "/oauth/access_token",
-                  "T9NO0aQIgkD81XkeR8Ag",
-                  "Cz4ImF6Y1GRgenom1Jyarmb3lIzlgo2kCBQhWaEp",
-                  "1.0",
-                  'http://localhost:3005/oauth',
-                  "HMAC-SHA1");
 
 // Routes
 
