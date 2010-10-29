@@ -59,15 +59,21 @@ app.get('/', function(req, res){
 });
 
 app.get('/auth', function(req, res) {
-  oa.getOAuthRequestToken(function(error, oauth_token, oauth_token_secret, results){
-    if(error) {
-      res.send('error :' + sys.inspect(error), 500);
-    } else {
-      req.session.oauth_token = oauth_token;
-      req.session.oauth_token_secret = oauth_token_secret;
-      res.redirect(cobot_base_url + '/oauth/authorize?oauth_token=' + oauth_token);
-    }
-  });
+  if(req.query.access_token && req.query.access_secret) {
+    req.session.oauth_access_token = req.query.access_token;
+    req.session.oauth_access_token_secret = req.query.access_secret;
+    res.redirect('/user');
+  } else {
+    oa.getOAuthRequestToken(function(error, oauth_token, oauth_token_secret, results){
+      if(error) {
+        res.send('error :' + sys.inspect(error), 500);
+      } else {
+        req.session.oauth_token = oauth_token;
+        req.session.oauth_token_secret = oauth_token_secret;
+        res.redirect(cobot_base_url + '/oauth/authorize?oauth_token=' + oauth_token);
+      }
+    });
+  }
 });
 
 app.get('/oauth', function(req, res) {
@@ -85,7 +91,9 @@ app.get('/oauth', function(req, res) {
 app.get('/user', function(req, res) {
   oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(user, response) {
     res.render('user', {locals: {
-      login: user.login
+      login: user.login,
+      access_token: req.session.oauth_access_token,
+      access_secret: req.session.oauth_access_token_secret
     }});
   }));
 });
