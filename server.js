@@ -83,39 +83,43 @@ app.get('/oauth', function(req, res) {
 });
 
 app.get('/user', function(req, res) {
-  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, user, response) {
-    if(error) {
-      res.send('error :' + sys.inspect(error), 500);
-    } else {
-      res.render('user', {locals: {
-        login: user.login
-      }});
-    }
-  });
-  
+  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(user, response) {
+    res.render('user', {locals: {
+      login: user.login
+    }});
+  }));
 });
+
+function handle_error(res, callback) {
+  return function() {
+    var args = Array.prototype.slice.call(arguments); 
+    var error = args.shift(); 
+
+    if(!error) {
+      callback.apply(null, args);
+    } else {
+      if(error.statusCode == 401) {
+        res.redirect('/auth');
+      } else {
+        res.send(error, 500);
+      }
+    };
+  };
+}
 
 
 app.get('/spaces/:subdomain', function(req, res) {
   var space_base_url = cobot_base_url.replace('www', req.params.subdomain);
-  oa.getProtectedResource(space_base_url + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, memberships, response) {
-    if(error) {
-      res.send('error :' + sys.inspect(error), 500);
-    } else {
-      oa.getProtectedResource(space_base_url + "/api/work_sessions?from=" + beginning_of_day() + '&to=' + end_of_day(), "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  function (error, work_sessions, response) {
-        if(error) {
-          res.send('error :' + sys.inspect(error), 500);
-        } else {
-          res.render('memberships', {
-            locals: {
-              memberships: MembershipsView(JSON.parse(memberships), JSON.parse(work_sessions)),
-              subdomain: req.params.subdomain
-            }
-          });
+  oa.getProtectedResource(space_base_url + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret, handle_error(res, function (memberships, response) {
+    oa.getProtectedResource(space_base_url + "/api/work_sessions?from=" + beginning_of_day() + '&to=' + end_of_day(), "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(work_sessions, response) {
+      res.render('memberships', {
+        locals: {
+          memberships: MembershipsView(JSON.parse(memberships), JSON.parse(work_sessions)),
+          subdomain: req.params.subdomain
         }
       });
-    }
-  });
+    }));
+  }));
   
   function beginning_of_day() {
     var now = new Date();
