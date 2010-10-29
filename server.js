@@ -107,7 +107,7 @@ function handle_error(res, callback) {
       callback.apply(null, args);
     } else {
       if(error.statusCode == 401) {
-        res.redirect('/auth');
+        res.redirect('/');
       } else {
         res.send(error, 500);
       }

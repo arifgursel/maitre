@@ -32,4 +32,12 @@ $(function() {
     $.jStorage.set('cobot_access_secret', window.access_secret);
   };
   
+  if($('input#subdomain').get(0)) {
+    $('input#subdomain').val($.jStorage.get('cobot_subdomain'));
+    $('input#subdomain').change(function() {
+      $.jStorage.set('cobot_subdomain', $(this).val());
+    });
+    
+  }
+  
 });
