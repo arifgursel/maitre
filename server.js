@@ -4,7 +4,6 @@ require.paths.unshift('vendor/express/lib');
 require.paths.unshift('vendor');
 require.paths.unshift('lib');
 
-require('date');
 
 var express = require('express'),
     connect = require('connect');
@@ -34,8 +33,8 @@ app.configure('development', function(){
     cobot_base_url = 'http://www.smackaho.st:3000';
     oa = new OAuth(cobot_base_url + "/oauth/request_token",
       cobot_base_url + "/oauth/access_token",
-      "xH6IPvt5S1av1xlcGcxH",
-      "i8DG1f2PlyvOh0uvtN6Pi0c5svCXm07LMaE1KSeK",
+      "T9NO0aQIgkD81XkeR8Ag",
+      "Cz4ImF6Y1GRgenom1Jyarmb3lIzlgo2kCBQhWaEp",
       "1.0",
       'http://localhost:3005/oauth',
       "HMAC-SHA1");
@@ -90,7 +89,7 @@ app.get('/oauth', function(req, res) {
 });
 
 app.get('/user', function(req, res) {
-  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(user) {
+  oa.getProtectedResource(cobot_base_url + "/api/user", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(user, response) {
     res.render('user', {locals: {
       login: user.login,
       access_token: req.session.oauth_access_token,
@@ -119,33 +118,25 @@ function handle_error(res, callback) {
 
 app.get('/spaces/:subdomain', function(req, res) {
   var space_base_url = cobot_base_url.replace('www', req.params.subdomain);
-  getProtectedResource(cobot_base_url + '/api/space/' + req.params.subdomain, function(space) {
-    getProtectedResource(space_base_url + "/api/memberships", function (memberships) {
-      getProtectedResource(space_base_url + "/api/work_sessions?from=" + beginning_of_day(space.time_zone_offset) + '&to=' + end_of_day(space.time_zone_offset), function(work_sessions) {
-        res.render('memberships', {
-          locals: {
-            memberships: MembershipsView(JSON.parse(memberships), JSON.parse(work_sessions)),
-            subdomain: req.params.subdomain
-          }
-        });
+  oa.getProtectedResource(space_base_url + "/api/memberships", "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret, handle_error(res, function (memberships, response) {
+    oa.getProtectedResource(space_base_url + "/api/work_sessions?from=" + beginning_of_day() + '&to=' + end_of_day(), "GET", req.session.oauth_access_token, req.session.oauth_access_token_secret,  handle_error(res, function(work_sessions, response) {
+      res.render('memberships', {
+        locals: {
+          memberships: MembershipsView(JSON.parse(memberships), JSON.parse(work_sessions)),
+          subdomain: req.params.subdomain
+        }
       });
-    });
-  });
+    }));
+  }));
   
-  function getProtectedResource(url, callback) {
-    oa.getProtectedResource(url, 'GET', req.session.oauth_access_token,
-      req.session.oauth_access_token_secret, handle_error(res, callback));
+  function beginning_of_day() {
+    var now = new Date();
+    return ISODateString(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
   }
   
-  var day_offset = 4; // cobot days start at 4am
-  function beginning_of_day(time_zone_offset) {
-    var date = Date.today().set({hour: 0, minute: 0, second: 0}).add(day_offset).hours().add(time_zone_offset * -1).hours();
-    return ISODateString(date);
-  }
-  
-  function end_of_day(time_zone_offset) {
-    var date = Date.today().set({hour: 23, minute: 59, second: 59}).add(day_offset).hours().add(time_zone_offset * -1).hours();
-    return ISODateString(date);
+  function end_of_day() {
+    var now = new Date();
+    return ISODateString(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59));
   }
   
   function ISODateString(d){
