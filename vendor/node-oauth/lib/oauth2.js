@@ -29,7 +29,8 @@ exports.OAuth2.prototype._request= function(method, url, headers, access_token, 
   var creds = crypto.createCredentials({ });  
   var parsedUrl= URL.parse( url, true );   
   if( parsedUrl.protocol == "https:" && !parsedUrl.port ) parsedUrl.port= 443;
-  var httpClient = http.createClient(parsedUrl.port, parsedUrl.hostname, true, creds);
+  var httpClient = http.createClient(parsedUrl.port, parsedUrl.hostname, parsedUrl.protocol == "https:", creds);
+  var body, path;
   
   var realHeaders= {};
   if( headers ) {
@@ -39,21 +40,19 @@ exports.OAuth2.prototype._request= function(method, url, headers, access_token, 
   }
   realHeaders['Host']= parsedUrl.host;
 
-  //TODO: Content length should be dynamic when dealing with POST methods....
-  realHeaders['Content-Length']= 0;
   if( access_token ) {
-    if( ! parsedUrl.query ) parsedUrl.query= {};
-    parsedUrl.query["access_token"]= access_token;
+    realHeaders['Authorization'] = 'OAuth ' + access_token;
   }
+  
+  if( method == "POST" ) {
+    body = querystring.stringify(parsedUrl.query);
+    path = parsedUrl.pathname;
+  } else {
+    path = parsedUrl.pathname + "?" + querystring.stringify(parsedUrl.query);
+  }
+  realHeaders['Content-Length']= body ? body.length : 0;
 
-  var request = httpClient.request(method, parsedUrl.pathname + "?" + querystring.stringify(parsedUrl.query), realHeaders );   
-
-  httpClient.addListener("secure", function () {
-/* // disable verification for now.      
-
-var verified = httpClient.verifyPeer();
-      if(!verified) this.end();   */
-  });  
+  var request = httpClient.request(method, path, realHeaders );
 
   var result= "";
   request.addListener('response', function (response) { 
@@ -61,15 +60,15 @@ var verified = httpClient.verifyPeer();
       result+= chunk
     });
     response.addListener("end", function () {
-      if( response.statusCode != 200 ) {
+      if(('' + response.statusCode)[0] != '2') {
         callback({ statusCode: response.statusCode, data: result });
       } else {
         callback(null, result, response);
       }
     });
   });
-
-  request.end();
+  
+  request.end(body);
 } 
 
 
@@ -87,7 +86,7 @@ exports.OAuth2.prototype.getOAuthAccessToken= function(code, params, callback) {
   this._request("POST", this._getAccessTokenUrl(params), {}, null, function(error, data, response) {
     if( error )  callback(error);
     else {
-      var results= querystring.parse(data);
+      var results= JSON.parse(data);
       var access_token= results["access_token"];
       var refresh_token= results["refresh_token"];
       delete results["refresh_token"];
@@ -103,4 +102,9 @@ exports.OAuth2.prototype.getProtectedResource= function(url, access_token, callb
 
 exports.OAuth2.prototype.get= function(url, access_token, callback) {
   this._request("GET", url, {}, access_token, callback );
+}
+
+
+exports.OAuth2.prototype.post= function(url, access_token, callback) {
+  this._request("POST", url, {}, access_token, callback );
 }
